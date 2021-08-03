@@ -30,15 +30,13 @@ console.log(Object.getPrototypeOf(maxi).bark === Dog.myPrototype.bark); // true
 console.log(Object.getPrototypeOf(dexter).bark === Dog.myPrototype.bark); // true
 console.log(Object.getPrototypeOf(biggie).bark === Dog.myPrototype.bark); // true
 
-// let test = Dog.prototype;
-// let test1 = maxi.__proto__;
-// let test2 = dexter.__proto__;
-// let test3 = biggie.__proto__;
-// console.log(test1 === test2);
-// console.log(test2 === test3);
-// console.log(test === test1);
+//also returns false because maxi, dexter, biggie uses Dog.myPrototype
+//as prototype not Dog's __proto__
 console.log(Object.getPrototypeOf(Dog) === Object.getPrototypeOf(maxi));
 console.log(Object.getPrototypeOf(Dog) === Object.getPrototypeOf(dexter));
 console.log(Object.getPrototypeOf(Dog) === Object.getPrototypeOf(biggie));
+
+//returns false because we have explicitly set the object prototype of biggie
+//as well as maxi, dexter to Dog.myPrototype
 console.log(Dog.prototype === Object.getPrototypeOf(biggie));
 console.log('hi');
