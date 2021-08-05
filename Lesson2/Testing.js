@@ -1,9 +1,22 @@
-let a = {
-  word : 'hello',
-  word2 : this.word //can't do this as the object a has not been created yet
+function repeatThreeTimes(func) {
+  console.log(this);
+  func();
+  func();
+  func();
+}
+
+let john = {
+  firstName: 'John',
+  lastName: 'Doe',
+  greetings: function() {
+    repeatThreeTimes(function() {
+      console.log('hello, ' + this.firstName + ' ' + this.lastName);
+    });
+  },
 };
 
-console.log(a.word);
-console.log(a.word2);
-a.word2 = a.word;
-console.log(a.word2);
+john.greetings();
+
+// => hello, undefined undefined
+// => hello, undefined undefined
+// => hello, undefined undefined
