@@ -21,3 +21,7 @@ class Rectangle {
 //Adding static property
 Rectangle.description2 = "A rectangle is a shape with 4 sides";
 
+let rec = new Rectangle(10, 5);
+console.log(Rectangle.hasOwnProperty('constructor'));
+console.log(Rectangle.prototype.hasOwnProperty('constructor'));
+console.log('stop');
