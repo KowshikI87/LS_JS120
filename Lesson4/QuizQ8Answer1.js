@@ -7,10 +7,10 @@ Person.prototype.speak = function() {
   return `Hello, my name is ${this.name}.`;
 };
 
-// missing code
 function Child(name, school) {
-  Person.call(this, name);
-  this.school = school;
+  let person = new Person(name);
+  person.school = school;
+  return person;
 }
 
 Child.prototype.learn = function() {

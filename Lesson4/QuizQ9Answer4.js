@@ -12,7 +12,6 @@ function Child(name, school) {
   this.school = school;
 }
 
-// more missing code
 Child.prototype = Object.create(Person.prototype);
 
 Child.prototype.learn = function() {
