@@ -34,7 +34,7 @@ class Board {
   //good idea to move this code to reset method. Makes it easy
   //to start a Board object and also reset it
   reset() {
-    this.squares = {}
+    this.squares = {};
     for (let counter = 1; counter <= 9; ++counter) {
       this.squares[String(counter)] = new Square();
     }
@@ -71,7 +71,7 @@ class Board {
 
   getUnusedSquaresPrettyFormat(midItemSep = ',', lastItemExtraSep = 'or') {
     let unusedSquares = this.unusedSquares();
-    
+
     if (unusedSquares.length <= 1) {
       return String(String(unusedSquares));
     } else if (unusedSquares.length === 2) {
@@ -87,10 +87,10 @@ class Board {
     return this.unusedSquares()[randomIndex];
   }
 
-  getSelMarkerPositionsAscSort(marker) {
+  getSelMarkerPos(marker) {
     let userMarkers = Object.keys(this.squares).filter(squareNum => {
       return this.squares[squareNum].getMarker() === marker;
-    })
+    });
 
     return userMarkers.sort((a, b) => Number(a) - Number(b)).join('');
   }
@@ -112,24 +112,38 @@ class Board {
 }
 
 class Player {
-  constructor(marker) {
+  constructor(name, marker) {
+    this.name = name;
     this.marker = marker;
+    this.score = 0;
   }
 
   getMarker() {
     return this.marker;
   }
+
+  getName() {
+    return this.name;
+  }
+
+  getScore() {
+    return this.score;
+  }
+
+  incrementScore() {
+    this.score += 1;
+  }
 }
 
 class Human extends Player {
-  constructor() {
-    super(Square.HUMAN_MARKER);
+  constructor(name) {
+    super(name, Square.HUMAN_MARKER);
   }
 }
 
 class Computer extends Player {
-  constructor() {
-    super(Square.COMPUTER_MARKER);
+  constructor(name) {
+    super(name, Square.COMPUTER_MARKER);
   }
 }
 
@@ -145,44 +159,49 @@ class TTTGame {
     [ "3", "5", "7" ],            // diagonal: bottom-left to top-right
   ];
 
+  static MATCH_GOAL = 3;
+
   //better to put it here over board class
   static DANGEROUS_COMB = { };
 
   constructor() {
     this.board = new Board();
-    this.human = new Human();
-    this.computer = new Computer();
-    this.scores = { "HUMAN" : 0, "COMPUTER": 0 };
+    this.human = new Human("Human1");
+    this.computer = new Computer("Computer1");
+    this.firstPlayer = this.human;
   }
 
   updateScore() {
     if (this.isWinner(this.human)) {
-      this.scores["HUMAN"] += 1
+      this.human.incrementScore();
     } else if (this.isWinner(this.computer)) {
-      this.scores["COMPUTER"] += 1;
+      this.computer.incrementScore();
     }
   }
 
   displayScore() {
-    console.log("Current Scores are as Follows: ")
-    Object.keys(this.scores).forEach(playerName => {
-      console.log(`${playerName}: ${this.scores[playerName]}`);
-    })
+    console.log("Current Scores are as Follows: ");
+    [this.human, this.computer].forEach(player => {
+      console.log(`${player.getName()}: ${player.getScore()}`);
+    });
     console.log("");
   }
 
   getMatchWinner() {
-    return Object.keys(this.scores).find(playerName => this.scores[playerName] >= 3);
+    return [this.human, this.computer].find(player => {
+      return player.getScore() >= TTTGame.MATCH_GOAL;
+    });
   }
 
   getDangerousSquareCombination() {
     let combination = [[0, 1], [0, 2], [1, 2]];
-     TTTGame.POSSIBLE_WINNING_ROWS.forEach((line) => {
+    TTTGame.POSSIBLE_WINNING_ROWS.forEach((line) => {
       TTTGame.DANGEROUS_COMB[line.join('')] = combination.map((comb) => String(line[comb[0]]) + String(line[comb[1]]));
-     })
+    });
   }
 
-  play() {
+  playMatch() {
+
     this.getDangerousSquareCombination();
     this.displayWelcomeMessage();
     while (true) {
@@ -190,32 +209,44 @@ class TTTGame {
       let matchWinner = this.getMatchWinner();
 
       if (matchWinner) {
-        console.log(`${matchWinner} has won 3 matches. The match is now done`);
+        console.log(`${matchWinner.name} has won 3 matches. The match is now done`);
         break;
       }
 
       if (!this.playAgain()) break;
+      this.firstPlayer = this.alternatePlayer(this.firstPlayer);
       console.log("Let's play again!");
     }
     this.displayGoodbyeMessage();
   }
 
   playOneGame() {
+    let currentPlayer = this.firstPlayer;
+
     this.board.reset();
     this.board.display();
     while (true) {
-      this.humanMoves();
+      this.makeMove(currentPlayer);
       if (this.gameOver()) break;
-
-      this.computerMoves();
-      if (this.gameOver()) break;
-
       this.board.displayWithClear();
+      currentPlayer = this.alternatePlayer(currentPlayer);
     }
 
     this.board.displayWithClear();
     this.updateScore();
     this.displayResults();
+  }
+
+  alternatePlayer(currentPlayer) {
+    return currentPlayer === this.human ? this.computer : this.human;
+  }
+
+  makeMove(currentPlayer) {
+    if (currentPlayer === this.human) {
+      this.humanMoves();
+    } else {
+      this.computerMoves();
+    }
   }
 
   //great implementation
@@ -239,6 +270,8 @@ class TTTGame {
     console.clear();
     console.log("Welcome to Tic Tac Toe!");
     console.log("");
+    console.log(`First player to win ${TTTGame.MATCH_GOAL} games wins the match.`);
+    console.log("");
   }
 
   displayGoodbyeMessage() {
@@ -247,9 +280,9 @@ class TTTGame {
 
   displayResults() {
     if (this.isWinner(this.human)) {
-      console.log("HUMAN won the game");
+      console.log(`${this.human.name} won the game`);
     } else if (this.isWinner(this.computer)) {
-      console.log("COMPUTER won the game");
+      console.log(`${this.computer.name} won the game`);
     } else {
       console.log("A tie game. How boring.");
     }
@@ -275,19 +308,19 @@ class TTTGame {
   }
 
   computerMoves() {
-    let playerSquares = this.board.getSelMarkerPositionsAscSort(this.human.getMarker()); //use human's method to get market not SQUARE.HUMAN_MARKER
-    let computerSquares = this.board.getSelMarkerPositionsAscSort(this.computer.getMarker());
+    let playerSquares = this.board.getSelMarkerPos(this.human.getMarker()); //use human's method to get market not SQUARE.HUMAN_MARKER
+    let computerSquares = this.board.getSelMarkerPos(this.computer.getMarker());
     //play offense/defense or use square #5 or play randomly
     let squareToMark = this.getCriticalSquare(playerSquares, computerSquares) ||
                        (this.board.unusedSquares().includes('5') ? '5' : undefined) ||
-                       this.board.getRandOpenSquare()
+                       this.board.getRandOpenSquare();
 
-    this.board.markSquareAt(squareToMark, this.computer.getMarker())
+    this.board.markSquareAt(squareToMark, this.computer.getMarker());
   }
 
   getCriticalSquare(playerSquares, computerSquares) {
-    let compWinLine = this.getPotentialWinningLine(computerSquares, playerSquares);
-    let playerWinLine = this.getPotentialWinningLine(playerSquares, computerSquares);
+    let compWinLine = this.getPotnWinningLine(computerSquares, playerSquares);
+    let playerWinLine = this.getPotnWinningLine(playerSquares, computerSquares);
 
     if (compWinLine) {
       return this.getCompWinSquare(compWinLine, computerSquares);
@@ -299,8 +332,8 @@ class TTTGame {
 
   }
 
-  getPotentialWinningLine(wantedSquares, unwantedSquares) {
-    let potnWinLine = Object.keys(TTTGame.DANGEROUS_COMB).find((winningLine) => {
+  getPotnWinningLine(wantedSquares, unwantedSquares) {
+    let potnWinLine = Object.keys(TTTGame.DANGEROUS_COMB).find(winningLine => {
       let curntDangCombs = TTTGame.DANGEROUS_COMB[winningLine];
       let isUnwantedMarkersPresent = unwantedSquares.split('').some((square => winningLine.includes(square)));
       let isTwoWantedMarkersPresent = curntDangCombs.some(comb => {
@@ -337,4 +370,4 @@ class TTTGame {
 
 
 let game = new TTTGame();
-game.play();
+game.playMatch();
